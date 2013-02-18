@@ -25,9 +25,9 @@ LOCK_FAIL()
 
   /usr/bin/fswebcam -r "$resolution" "$image";
   if [ -f "$image" ]; then
-    echo "${timestamp}:$image" >> "$output";
+    echo "${timestamp}:$image" >> "$input";
   else
-    echo "${timestamp}:" >> "$output";
+    echo "${timestamp}:" >> "$input";
   fi;
 }
 
