@@ -6,11 +6,11 @@ version="0.4" #######
 
 fail="2";
 resolution="1024x768";
+timestamp=$(date +%s);
 tmpDir="/dev/shm/lockdetect.$USER";
 input="$tmpDir/.spylist"
 output="$HOME/fails.html"
 image="$tmpDir/${timestamp}.jpg";
-timestamp=$(date +%s);
 
 if [ ! -f "/tmp/browser" ]; then
   browser="firefox"
@@ -47,7 +47,7 @@ LOCK_PARSE()
     echo "</body></html>" >> "$output";
     $browser "$output";
   else
-    rm "$tmpDir"/* 2>/dev/null;
+    rm "$tmpDir"/* "$output" 2>/dev/null;
   fi
 
   rm "$input" 2>/dev/null;
