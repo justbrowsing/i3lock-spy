@@ -1,0 +1,63 @@
+#!/bin/bash
+#####################
+### i3lock-sentry ###
+version="0.3" #######
+#####################
+
+fail="2";
+resolution="1024x768";
+tmpDir="/dev/shm/lockdetect.$USER";
+input="$tmpDir/.spylist"
+output="$HOME/fails.html"
+image="$tmpDir/${timestamp}.jpg";
+timestamp=$(date +%s);
+
+if [ ! -f "/tmp/browser" ]; then
+  browser="firefox"
+else
+  browser="google-chrome"
+fi
+
+LOCK_FAIL()
+{
+  [ ! -f "$input" ] && rm "$tmpDir"/* 2>/dev/null;
+  mkdir -p "$tmpDir" 2>/dev/null;
+
+  /usr/bin/fswebcam -r "$resolution" "$image";
+  if [ -f "$image" ]; then
+    echo "${timestamp}:$image" >> "$output";
+  else
+    echo "${timestamp}:" >> "$output";
+  fi;
+}
+
+LOCK_PARSE()
+{
+  count="0";
+  if [ -f "$input" ]; then
+   count=$(cat "$input" 2>/dev/null | grep -v ^$ | wc -l);
+  fi
+  
+  if [ "$count" -ge "$fail" ]; then
+    echo "<html><head><title>Intruder log</title></head><body>" > "$output";
+    echo "<h2>Failed login count: $count</h2>" >> "$output";
+    for capture in $(cat "$input" | awk -F ":" '{print $2}'); do
+      echo "<a href=""\"file://${capture}""\"><img src=""\"file://${capture}""\" width=""\"200px""\"></a>" >> "$output";
+    done;
+    echo "</body></html>" >> "$output";
+    $browser "$output";
+  else
+    rm "$tmpDir/lockdetect.$USER"/* 2>/dev/null;
+  fi
+  
+  rm "$input" 2>/dev/null;
+}
+
+
+if [ "$1" = "parse" ]; then
+  LOCK_PARSE
+elif [ "$1" = "fail" ]; then
+  LOCK_FAIL
+fi
+
+### END ###
