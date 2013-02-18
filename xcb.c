@@ -8,6 +8,7 @@
  *
  */
 #include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
 #include <xcb/xcb_image.h>
 #include <xcb/dpms.h>
 #include <stdio.h>
@@ -117,6 +118,7 @@ xcb_window_t open_fullscreen_window(xcb_connection_t *conn, xcb_screen_t *scr, c
     values[2] = XCB_EVENT_MASK_EXPOSURE |
                 XCB_EVENT_MASK_KEY_PRESS |
                 XCB_EVENT_MASK_KEY_RELEASE |
+                XCB_EVENT_MASK_BUTTON_PRESS | /* i3lock-spy */
                 XCB_EVENT_MASK_VISIBILITY_CHANGE |
                 XCB_EVENT_MASK_STRUCTURE_NOTIFY;
 
@@ -124,9 +126,9 @@ xcb_window_t open_fullscreen_window(xcb_connection_t *conn, xcb_screen_t *scr, c
                       XCB_COPY_FROM_PARENT,
                       win, /* the window id */
                       scr->root, /* parent == root */
-                      0, 0,
+                      0, 64, /* i3lock-spy */
                       scr->width_in_pixels,
-                      scr->height_in_pixels, /* dimensions */
+                      (scr->height_in_pixels-64), /* dimensions */
                       0, /* border = 0, we draw our own */
                       XCB_WINDOW_CLASS_INPUT_OUTPUT,
                       XCB_WINDOW_CLASS_COPY_FROM_PARENT, /* copy visual from parent */
@@ -137,10 +139,57 @@ xcb_window_t open_fullscreen_window(xcb_connection_t *conn, xcb_screen_t *scr, c
     xcb_map_window(conn, win);
 
     /* Raise window (put it on top) */
-    values[0] = XCB_STACK_MODE_ABOVE;
+    values[1] = XCB_STACK_MODE_ABOVE /* i3lock-spy */;
     xcb_configure_window(conn, win, XCB_CONFIG_WINDOW_STACK_MODE, values);
 
     return win;
+}
+
+/*
+ * Returns the mask for Mode_switch (to be used for looking up keysymbols by
+ * keycode).
+ *
+ */
+uint32_t get_mod_mask(xcb_connection_t *conn, xcb_key_symbols_t *symbols, uint32_t keycode) {
+    xcb_get_modifier_mapping_reply_t *modmap_r;
+    xcb_keycode_t *modmap, kc;
+    xcb_keycode_t *modeswitchcodes = xcb_key_symbols_get_keycode(symbols, keycode);
+    if (modeswitchcodes == NULL)
+        return 0;
+
+    modmap_r = xcb_get_modifier_mapping_reply(conn, xcb_get_modifier_mapping(conn), NULL);
+    modmap = xcb_get_modifier_mapping_keycodes(modmap_r);
+
+    for (int i = 0; i < 8; i++) {
+        /* We skip i == 0 (Shift) because Shift is always Shift. Handling it
+         * would make i3lock believe that Shift is the modifier for CapsLock in
+         * case CapsLock is activated using the shift keysym:
+         *
+         * $ xmodmap
+         * shift       Shift_L (0x32),  Shift_R (0x3e)
+         * lock        Shift_L (0x32)
+         *
+         * The X11 documentation states that CapsLock and ShiftLock can only be
+         * on the lock modifier.
+         */
+        if (i == 0)
+            continue;
+        for (int j = 0; j < modmap_r->keycodes_per_modifier; j++) {
+            kc = modmap[i * modmap_r->keycodes_per_modifier + j];
+            for (xcb_keycode_t *ktest = modeswitchcodes; *ktest; ktest++) {
+                if (*ktest != kc)
+                    continue;
+
+                free(modeswitchcodes);
+                free(modmap_r);
+                return (1 << i);
+            }
+        }
+    }
+
+    free(modeswitchcodes);
+    free(modmap_r);
+    return 0;
 }
 
 void dpms_turn_off_screen(xcb_connection_t *conn) {
@@ -161,31 +210,7 @@ void grab_pointer_and_keyboard(xcb_connection_t *conn, xcb_screen_t *screen, xcb
     xcb_grab_keyboard_reply_t *kreply;
 
     int tries = 10000;
-
-    while (tries-- > 0) {
-        pcookie = xcb_grab_pointer(
-            conn,
-            false,               /* get all pointer events specified by the following mask */
-            screen->root,        /* grab the root window */
-            XCB_NONE,            /* which events to let through */
-            XCB_GRAB_MODE_ASYNC, /* pointer events should continue as normal */
-            XCB_GRAB_MODE_ASYNC, /* keyboard mode */
-            XCB_NONE,            /* confine_to = in which window should the cursor stay */
-            cursor,              /* we change the cursor to whatever the user wanted */
-            XCB_CURRENT_TIME
-        );
-
-        if ((preply = xcb_grab_pointer_reply(conn, pcookie, NULL)) &&
-            preply->status == XCB_GRAB_STATUS_SUCCESS) {
-            free(preply);
-            break;
-        }
-
-        /* Make this quite a bit slower */
-        usleep(50);
-    }
-
-    while (tries-- > 0) {
+      while (tries-- > 0) { /* i3lock-spy */
         kcookie = xcb_grab_keyboard(
             conn,
             true,                /* report events */
