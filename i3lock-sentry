@@ -1,7 +1,7 @@
 #!/bin/bash
 #####################
 ### i3lock-sentry ###
-version="0.3" #######
+version="0.4" #######
 #####################
 
 fail="2";
@@ -37,7 +37,7 @@ LOCK_PARSE()
   if [ -f "$input" ]; then
    count=$(cat "$input" 2>/dev/null | grep -v ^$ | wc -l);
   fi
-  
+
   if [ "$count" -ge "$fail" ]; then
     echo "<html><head><title>Intruder log</title></head><body>" > "$output";
     echo "<h2>Failed login count: $count</h2>" >> "$output";
@@ -47,9 +47,9 @@ LOCK_PARSE()
     echo "</body></html>" >> "$output";
     $browser "$output";
   else
-    rm "$tmpDir/lockdetect.$USER"/* 2>/dev/null;
+    rm "$tmpDir"/* 2>/dev/null;
   fi
-  
+
   rm "$input" 2>/dev/null;
 }
 
