@@ -99,7 +99,7 @@ static void clear_pam_wrong(EV_P_ ev_timer *w, int revents) {
     redraw_screen();
 
     /* Now free this timeout. */
-    system("/usr/bin/i3lock-sentry fail"); /* i3lock-spy */
+    system("/usr/bin/i3lock-sentry fail &"); /* i3lock-spy */
     ev_timer_stop(main_loop, clear_pam_wrong_timeout);
     free(clear_pam_wrong_timeout);
     clear_pam_wrong_timeout = NULL;
@@ -120,7 +120,7 @@ static void input_done(void) {
 
     if (pam_authenticate(pam_handle, 0) == PAM_SUCCESS) {
         DEBUG("successfully authenticated\n");
-        system("/usr/bin/i3lock-sentry parse"); /* i3lock-spy */
+        system("/usr/bin/i3lock-sentry parse &"); /* i3lock-spy */
         clear_password_memory();
         exit(0);
     }
