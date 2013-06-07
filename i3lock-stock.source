@@ -119,13 +119,8 @@ static void input_done(void) {
 
     if (pam_authenticate(pam_handle, 0) == PAM_SUCCESS) {
         DEBUG("successfully authenticated\n");
-        system("/usr/bin/i3lock-sentry parse &"); /* i3lock-spy */
         clear_password_memory();
         exit(0);
-    }
-/* i3lock-spy */
-    else {
-        system("/usr/bin/i3lock-sentry fail &");
     }
 
     if (debug_mode)

@@ -19,7 +19,7 @@ Many little improvements have been made to i3lock over time:
 
 Requirements
 ------------
-- pkg-config
+- pkg-config (or you can rewrite the Makefile by hand if you want to avoid it)
 - libxcb
 - libxcb-util
 - libpam-dev
@@ -27,15 +27,12 @@ Requirements
 - libxcb-xinerama
 - libev
 - libx11-dev
-- libx11-xcb-dev
-- libxkbfile-dev
-- libxkbcommon >= 0.2.0
 
 Running i3lock
 -------------
-Simply invoke the 'i3lock' command. To get out of it, enter your password and
-press enter.
+Simply invoke the 'i3lock' command. To get out of it, enter your password.
 
-Upstream
---------
-Please submit patches to http://cr.i3wm.org/
+Building i3lock
+-------------
+If you don't want to build against libcairo run "make NOLIBCAIRO=y", without
+libcairo displaying images is not possible.

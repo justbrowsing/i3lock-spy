@@ -11,16 +11,23 @@ CFLAGS += -std=c99
 CFLAGS += -pipe
 CFLAGS += -Wall
 CPPFLAGS += -D_GNU_SOURCE
-CFLAGS += $(shell pkg-config --cflags cairo xcb-dpms xcb-xinerama xkbcommon xkbfile x11 x11-xcb)
-LIBS += $(shell pkg-config --libs cairo xcb-dpms xcb-xinerama xcb-image xkbcommon xkbfile x11 x11-xcb)
+ifndef NOLIBCAIRO
+CFLAGS += $(shell pkg-config --cflags cairo xcb-keysyms xcb-dpms xcb-xinerama)
+LIBS += $(shell pkg-config --libs cairo xcb-keysyms xcb-dpms xcb-xinerama xcb-image)
+else
+CPPFLAGS += -DNOLIBCAIRO
+CFLAGS += $(shell pkg-config --cflags xcb-keysyms xcb-dpms xcb-xinerama)
+LIBS += $(shell pkg-config --libs xcb-keysyms xcb-dpms xcb-image xcb-xinerama)
+endif
 LIBS += -lpam
 LIBS += -lev
+LIBS += -lX11
 
 FILES:=$(wildcard *.c)
 FILES:=$(FILES:.c=.o)
 
-VERSION:=$(shell git describe --tags --abbrev=0)
-GIT_VERSION:="$(shell git describe --tags --always) ($(shell git log --pretty=format:%cd --date=short -n1))"
+VERSION:=2.4.1
+GIT_VERSION:="2.4.1 (2012-06-02)"
 CPPFLAGS += -DVERSION=\"${GIT_VERSION}\"
 
 .PHONY: install clean uninstall
