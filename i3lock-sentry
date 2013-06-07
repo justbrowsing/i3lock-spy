@@ -56,7 +56,7 @@ LOCK_PARSE()
   if [ -f "$input" ]; then
    count=$(cat "$input" 2>/dev/null | grep -v ^$ | wc -l);
   fi
-echo $count >> /dev/shm/lol
+
   if [ "$count" -ge "$fail" ]; then
     echo "<html><head><title>Intruder log</title></head><body>" > "$output";
     echo "<h2>Failed login count: $count</h2>" >> "$output";
