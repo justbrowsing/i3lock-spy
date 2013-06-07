@@ -1,29 +1,48 @@
 #!/bin/bash
 #####################
 ### i3lock-sentry ###
-version="0.4" #######
+version="0.5" #######
 #####################
 
 fail="2";
-resolution="1024x768";
 timestamp=$(date +%s);
 tmpDir="/dev/shm/lockdetect.$USER";
 input="$tmpDir/.spylist"
 output="$HOME/fails.html"
 image="$tmpDir/${timestamp}.jpg";
 
-if [ ! -f "/tmp/browser" ]; then
-  browser="firefox"
-else
-  browser="google-chrome"
-fi
+DETECT_BROWSER()
+{
+  _config="$HOME/.config/adeskbar/default.cfg";
+  _cmd=$(grep -n "\[LAUNCHER/4]" $_config | awk -F : '{print $1+1}');
+  _select=$(awk -v line=$_cmd NR==line $_config | awk '{print $1}' | awk -F = '{print $2}');
+
+  allbrowsers="chromium firefox google-chrome opera seamonkey";
+  for exec in $allbrowsers; do
+    [ -f "/usr/bin/$exec" ] && _list="${_list} $exec";
+  done
+
+  [[ "$_list" =~ \w*$_select\w* ]] && browser="$_select"
+
+  if [ -z "$browser" ]; then
+    for program in $_list; do
+      status=$(pgrep $program 2>/dev/null);
+      [ ! -z "$status" ] && browser="$program";
+    done
+  fi
+
+  [ -z "$browser" ] && browser="xdg-open";
+}
 
 LOCK_FAIL()
 {
   [ ! -f "$input" ] && rm "$tmpDir"/* 2>/dev/null;
   mkdir -p "$tmpDir" 2>/dev/null;
 
-  /usr/bin/fswebcam -r "$resolution" "$image";
+  _arch=$(uname -m);
+  [ "$_arch" = "x86_64" ] && _lib="lib32" || _lib="lib";
+  LD_PRELOAD=/usr/${_lib}/libv4l/v4l1compat.so /usr/bin/fswebcam "$image"
+
   if [ -f "$image" ]; then
     echo "${timestamp}:$image" >> "$input";
   else
@@ -37,7 +56,7 @@ LOCK_PARSE()
   if [ -f "$input" ]; then
    count=$(cat "$input" 2>/dev/null | grep -v ^$ | wc -l);
   fi
-
+echo $count >> /dev/shm/lol
   if [ "$count" -ge "$fail" ]; then
     echo "<html><head><title>Intruder log</title></head><body>" > "$output";
     echo "<h2>Failed login count: $count</h2>" >> "$output";
@@ -45,6 +64,7 @@ LOCK_PARSE()
       echo "<a href=""\"file://${capture}""\"><img src=""\"file://${capture}""\" width=""\"200px""\"></a>" >> "$output";
     done;
     echo "</body></html>" >> "$output";
+    DETECT_BROWSER
     $browser "$output";
   else
     rm "$tmpDir"/* "$output" 2>/dev/null;
