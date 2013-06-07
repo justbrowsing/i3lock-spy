@@ -1,16 +1,16 @@
 # Maintainer: justbrowsing <developer4linux+aur@gmail.com>
-# Contributor: Thorsten Töpper <atsutane-tu@freethoughts.de>
+# Contributor: Thorsten TÃ¶pper <atsutane-tu@freethoughts.de>
 
 pkgname=i3lock-spy
 _pkgname=i3lock
 pkgver=2.4.1
-pkgrel=5
-pkgdesc="A screenlocker with intruder detection"
+pkgrel=6
+pkgdesc="A screenlocker with intruder detection designed for JustBrowsing"
 arch=('i686' 'x86_64' 'arm')
-url="http://i3wm.org/i3lock/"
+url="https://github.com/justbrowsing/i3lock-spy"
 license=('MIT')
 groups=("justbrowsing")
-depends=('xcb-util-image' 'xcb-util-keysyms' 'pam' 'libev' 'cairo' 'fswebcam')
+depends=('xcb-util-image' 'xcb-util-keysyms' 'pam' 'libev' 'cairo' 'fswebcam' 'v4l-utils')
 optdepends=('wbar: To add a lockscreen panel')
 conflicts=('i3lock')
 provides=('i3lock')
@@ -83,3 +83,4 @@ package() {
   install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE
   make clean
 }
+
