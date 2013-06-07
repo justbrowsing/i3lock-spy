@@ -17,7 +17,7 @@ provides=('i3lock')
 options=('docs')
 backup=("etc/pam.d/i3lock")
 source=("http://i3wm.org/i3lock/${_pkgname}-$pkgver.tar.bz2" "https://raw.github.com/justbrowsing/i3lock-spy/master/i3lock-sentry")
-md5sums=('fbc954133a6335be89e394d9ec85fcfd' '3e5b06c841916832ab48030655b0f239')
+md5sums=('fbc954133a6335be89e394d9ec85fcfd' '4dadd384adbc7792417b1b9e5a31aab2')
 
 build() {
   cd "${srcdir}/${_pkgname}-${pkgver}"
