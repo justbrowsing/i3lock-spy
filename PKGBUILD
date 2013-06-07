@@ -1,10 +1,10 @@
 # Maintainer: justbrowsing <developer4linux+aur@gmail.com>
-# Contributor: Thorsten Topper <atsutane-tu@freethoughts.de>
+# Contributor: Thorsten Töpper <atsutane-tu@freethoughts.de>
 
 pkgname=i3lock-spy
 _pkgname=i3lock
 pkgver=2.4.1
-pkgrel=2
+pkgrel=5
 pkgdesc="A screenlocker with intruder detection"
 arch=('i686' 'x86_64' 'arm')
 url="http://i3wm.org/i3lock/"
@@ -17,33 +17,52 @@ provides=('i3lock')
 options=('docs')
 backup=("etc/pam.d/i3lock")
 source=("http://i3wm.org/i3lock/${_pkgname}-$pkgver.tar.bz2" "https://raw.github.com/justbrowsing/i3lock-spy/master/i3lock-sentry")
-md5sums=('fbc954133a6335be89e394d9ec85fcfd' '0a9817fd0080bf6cb51671a17ea9ca6d')
+md5sums=('fbc954133a6335be89e394d9ec85fcfd' '3e5b06c841916832ab48030655b0f239')
 
 build() {
   cd "${srcdir}/${_pkgname}-${pkgver}"
 
+  # Fix ticket FS#31544, sed line taken from gentoo
+  sed -i -e 's:login:system-auth:' i3lock.pam
+  cp i3lock.c i3lock-stock.source
+
+  # Compile stock i3lock
+  cp i3lock-stock.source i3lock.c
+  make
+  cp i3lock i3lock-stock
+  make clean
+
   # Add i3lock-sentry hooks
-  sed -i 's/Now free this timeout. \*\//&\n    _SED__NEWLINE_/g' i3lock.c
-  sed -i 's/_SED__NEWLINE_/system("\/usr\/bin\/i3lock-sentry fail \&"); \/\* i3lock-spy \*\//g' i3lock.c
+  cp i3lock-stock.source i3lock.c
+  _SENTRY_FAIL=$(grep -n pam_authenticate i3lock.c | awk -F : '{print $1+5}'); 
+  sed -i "${_SENTRY_FAIL}i\/\* i3lock-spy \*\/\n    else {\n        system(""\"\/usr\/bin\/i3lock-sentry fail \&""\");\n    }" i3lock.c
   sed -i 's/DEBUG("successfully authenticated\\n");/&\n        _SED__NEWLINE_/g' i3lock.c
   sed -i 's/_SED__NEWLINE_/system("\/usr\/bin\/i3lock-sentry parse \&"); \/\* i3lock-spy \*\//g' i3lock.c
+  cp i3lock.c i3lock-spy.source
+  make
+  cp i3lock i3lock-spy
+  make clean
 
   # Add mouse support
+  cp i3lock-spy.source i3lock.c
   sed -i 's/XCB_EVENT_MASK_KEY_RELEASE |/&\n                _SED__NEWLINE_/g' xcb.c
   sed -i 's/_SED__NEWLINE_/XCB_EVENT_MASK_BUTTON_PRESS | \/\* i3lock-spy \*\//g' xcb.c
   sed -i '/int tries = 10000;/,/kcookie = xcb_grab_keyboard(/{/int tries = 10000;/!{/kcookie = xcb_grab_keyboard(/!d}}' xcb.c
   sed -i 's/int tries = 10000;/&\n      _SED__NEWLINE_/g' xcb.c
   sed -i 's/_SED__NEWLINE_/while (tries-- > 0) { \/\* i3lock-spy \*\//g' xcb.c
+  cp i3lock.c i3lock-spy-mouse.source
+  make
+  cp i3lock i3lock-spy-mouse
+  make clean
 
   # Add top wbar panel support
+  cp i3lock-spy-mouse.source i3lock.c
   sed -i 's/                      0, 0,/                      0, 64, \/\* i3lock-spy \*\//g' xcb.c
   sed -i 's/scr->height_in_pixels/(&-64)/g' xcb.c
   sed -i 's/values\[0\] = XCB_STACK_MODE_ABOVE/values\[1\] = XCB_STACK_MODE_ABOVE \/\* i3lock-spy \*\//g' xcb.c
-
-  # Fix ticket FS#31544, sed line taken from gentoo
-  sed -i -e 's:login:system-auth:' i3lock.pam
-
+  cp i3lock.c i3lock-spy-wbar.source
   make
+  cp i3lock i3lock-spy-wbar
   gzip i3lock.1
 }
 
@@ -55,9 +74,12 @@ package() {
 
   cd "${srcdir}/${_pkgname}-${pkgver}"
   make DESTDIR="${pkgdir}" install
+  cp i3lock-stock $pkgdir/usr/bin/i3lock
+  cp i3lock-spy $pkgdir/usr/bin/i3lock-spy
+  cp i3lock-spy-mouse $pkgdir/usr/bin/i3lock-spy-mouse
+  cp i3lock-spy-wbar $pkgdir/usr/bin/i3lock-spy-wbar
   
   install -Dm644 i3lock.1.gz ${pkgdir}/usr/share/man/man1/i3lock.1.gz
   install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE
   make clean
 }
-
