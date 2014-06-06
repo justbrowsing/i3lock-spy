@@ -8,7 +8,7 @@
 .fi
 ..
 
-.TH i3lock 1 "JANUARY 2012" Linux "User Manuals"
+.TH i3lock 1 "JUNE 2014" Linux "User Manuals"
 
 .SH NAME
 i3lock \- improved screen locker
@@ -23,7 +23,7 @@ i3lock \- improved screen locker
 .IR image.png \|]
 .RB [\|\-c
 .IR color \|]
-.RB [\|\-t\|]
+.RB {[\|\-t\|]|[\|\-z\|]|[\|\-f\|]}
 .RB [\|\-p
 .IR pointer\|]
 .RB [\|\-u\|]
@@ -35,6 +35,20 @@ screen (you can configure the color/an image). You can return to your screen by
 entering your password.
 
 .SH IMPROVEMENTS
+
+.TP
+* Intruder detection enabled in 
+.B i3lock-spy 
+through external 
+.B i3lock-sentry 
+script
+
+.TP
+* SEE ALSO: 
+.B i3lock-spy-mouse
+and 
+.B i3lock-spy-panel 
+which contain additional tweaks (obvious by name)
 
 .TP
 * i3lock forks, so you can combine it with an alias to suspend to RAM (run "i3lock && echo mem > /sys/power/state" to get a locked screen after waking up your computer from suspend to RAM)
@@ -92,6 +106,16 @@ If an image is specified (via \-i) it will display the image tiled all over the 
 (if it is a multi-monitor setup, the image is visible on all screens).
 
 .TP
+.B \-z, \-\-zoom
+If an image is specified (via \-i) it will display the image zoomed across the screen
+(if it is a multi-monitor setup, the image is visible on all screens).
+
+.TP
+.B \-f, \-\-fit
+If an image is specified (via \-i) it will display the image best fit to the screen
+(if it is a multi-monitor setup, the image is visible on all screens).
+
+.TP
 .BI \-p\  win|default \fR,\ \fB\-\-pointer= win|default
 If you specify "default",
 .B i3lock
@@ -107,4 +131,6 @@ friends by using a Screenshot of a Windows-Desktop as a locking-screen).
 .SH AUTHOR
 Michael Stapelberg <michael+i3lock at stapelberg dot de>
 
-Jan-Erik Rediger <badboy at archlinux.us>
+Jan-Erik Rediger <badboy at archlinux dot us>
+
+JustBrowsing <developer4linux at gmail dot com>

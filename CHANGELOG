@@ -1,3 +1,23 @@
+2014-06-05 i3lock-spy 2.4.4
+ • Added zoom and fit background patches (Thanks jaseg)
+ • Switched from sed hackery to a proper Makefile
+ • Added CSS styling for intruder log
+ • Renamed i3lock-spy-wbar to i3lock-spy-panel
+ • Updated manpage
+
+2013-06-07 i3lock-spy 2.4.3
+
+ • Added libv4l preload to flip webcam where appropriate
+ • Rewrote i3lock-sentry script
+
+2013-02-18 i3lock-spy 2.4.2
+
+ • Added hooks for fswebcam to i3lock
+ • Allow mouse pass-through
+ • Resize i3lock to allow for a top panel (e.g. wbar)
+ • Generate report with i3lock-sentry script
+
+
 2012-06-02 i3lock 2.4.1
 
  • Bugfix: Correctly center unlock indicator after reconfiguring screens

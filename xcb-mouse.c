@@ -117,6 +117,7 @@ xcb_window_t open_fullscreen_window(xcb_connection_t *conn, xcb_screen_t *scr, c
     values[2] = XCB_EVENT_MASK_EXPOSURE |
                 XCB_EVENT_MASK_KEY_PRESS |
                 XCB_EVENT_MASK_KEY_RELEASE |
+                XCB_EVENT_MASK_BUTTON_PRESS | /* i3lock-spy */
                 XCB_EVENT_MASK_VISIBILITY_CHANGE |
                 XCB_EVENT_MASK_STRUCTURE_NOTIFY;
 
@@ -154,38 +155,12 @@ void dpms_turn_off_screen(xcb_connection_t *conn) {
  *
  */
 void grab_pointer_and_keyboard(xcb_connection_t *conn, xcb_screen_t *screen, xcb_cursor_t cursor) {
-    xcb_grab_pointer_cookie_t pcookie;
-    xcb_grab_pointer_reply_t *preply;
 
     xcb_grab_keyboard_cookie_t kcookie;
     xcb_grab_keyboard_reply_t *kreply;
 
     int tries = 10000;
-
-    while (tries-- > 0) {
-        pcookie = xcb_grab_pointer(
-            conn,
-            false,               /* get all pointer events specified by the following mask */
-            screen->root,        /* grab the root window */
-            XCB_NONE,            /* which events to let through */
-            XCB_GRAB_MODE_ASYNC, /* pointer events should continue as normal */
-            XCB_GRAB_MODE_ASYNC, /* keyboard mode */
-            XCB_NONE,            /* confine_to = in which window should the cursor stay */
-            cursor,              /* we change the cursor to whatever the user wanted */
-            XCB_CURRENT_TIME
-        );
-
-        if ((preply = xcb_grab_pointer_reply(conn, pcookie, NULL)) &&
-            preply->status == XCB_GRAB_STATUS_SUCCESS) {
-            free(preply);
-            break;
-        }
-
-        /* Make this quite a bit slower */
-        usleep(50);
-    }
-
-    while (tries-- > 0) {
+      while (tries-- > 0) { /* i3lock-spy */
         kcookie = xcb_grab_keyboard(
             conn,
             true,                /* report events */

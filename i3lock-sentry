@@ -1,79 +1,108 @@
 #!/bin/bash
 #####################
 ### i3lock-sentry ###
-version="0.5" #######
+version="0.6" #######
 #####################
 
-fail="2";
-timestamp=$(date +%s);
-tmpDir="/dev/shm/lockdetect.$USER";
+fail="1"
+timestamp=$(date +%s)
+tmpDir="/dev/shm/lockdetect.$USER"
 input="$tmpDir/.spylist"
+image="$tmpDir/${timestamp}.jpg"
 output="$HOME/fails.html"
-image="$tmpDir/${timestamp}.jpg";
+configDir="$HOME/.config/i3lock"
+cssFile="$configDir/sentry.css"
+placeholder="$configDir/placeholder.png"
+timeFormat="%I:%M%P"
 
 DETECT_BROWSER()
 {
-  _config="$HOME/.config/adeskbar/default.cfg";
-  _cmd=$(grep -n "\[LAUNCHER/4]" $_config | awk -F : '{print $1+1}');
-  _select=$(awk -v line=$_cmd NR==line $_config | awk '{print $1}' | awk -F = '{print $2}');
+  _config="$HOME/.config/adeskbar/default.cfg"
+  _cmd=$(grep -n "\[LAUNCHER/4]" $_config | awk -F : '{print $1+1}')
+  _select=$(awk -v line=$_cmd NR==line $_config | awk '{print $1}' | awk -F = '{print $2}')
 
-  allbrowsers="chromium firefox google-chrome opera seamonkey";
+  allbrowsers="chromium firefox google-chrome opera seamonkey"
   for exec in $allbrowsers; do
-    [ -f "/usr/bin/$exec" ] && _list="${_list} $exec";
+    [ -f "/usr/bin/$exec" ] && _list="${_list} $exec"
   done
 
   [[ "$_list" =~ \w*$_select\w* ]] && browser="$_select"
 
   if [ -z "$browser" ]; then
     for program in $_list; do
-      status=$(pgrep $program 2>/dev/null);
-      [ ! -z "$status" ] && browser="$program";
+      status=$(pgrep $program 2>/dev/null)
+      [ ! -z "$status" ] && browser="$program"
     done
   fi
 
-  [ -z "$browser" ] && browser="xdg-open";
+  [ -z "$browser" ] && browser="xdg-open"
 }
 
 LOCK_FAIL()
 {
-  [ ! -f "$input" ] && rm "$tmpDir"/* 2>/dev/null;
-  mkdir -p "$tmpDir" 2>/dev/null;
-
-  _arch=$(uname -m);
-  [ "$_arch" = "x86_64" ] && _lib="lib32" || _lib="lib";
-  LD_PRELOAD=/usr/${_lib}/libv4l/v4l1compat.so /usr/bin/fswebcam "$image"
+  [ ! -f "$input" ] && rm "$tmpDir"/* 2>/dev/null
+  mkdir -p "$tmpDir" 2>/dev/null
+  LD_PRELOAD=/usr/lib/libv4l/v4l1compat.so /usr/bin/fswebcam "$image"
 
   if [ -f "$image" ]; then
-    echo "${timestamp}:$image" >> "$input";
+    echo "${timestamp}:$image" >> "$input"
   else
-    echo "${timestamp}:" >> "$input";
-  fi;
+    echo "${timestamp}:" >> "$input"
+  fi
 }
 
 LOCK_PARSE()
 {
-  count="0";
+  count="0"
   if [ -f "$input" ]; then
-   count=$(cat "$input" 2>/dev/null | grep -v ^$ | wc -l);
+   count=$(cat "$input" 2>/dev/null | grep -v ^$ | wc -l)
   fi
 
   if [ "$count" -ge "$fail" ]; then
-    echo "<html><head><title>Intruder log</title></head><body>" > "$output";
-    echo "<h2>Failed login count: $count</h2>" >> "$output";
-    for capture in $(cat "$input" | awk -F ":" '{print $2}'); do
-      echo "<a href=""\"file://${capture}""\"><img src=""\"file://${capture}""\" width=""\"200px""\"></a>" >> "$output";
-    done;
-    echo "</body></html>" >> "$output";
+    [ ! -f "$cssFile" ] && cp "/etc/xdg/i3lock/sentry.css" "$cssFile"
+    [ ! -f "$placeholder" ] && cp "/etc/xdg/i3lock/placeholder.png" "$placeholder"
+    echo '<!DOCTYPE html><html><head>' > "$output"
+	echo "<title>i3lock ($count)</title>" >> "$output"
+
+    echo "<link href=""\"data:image/x-icon;base64,
+    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ
+    bWFnZVJlYWR5ccllPAAAAqFJREFUeNqkk09o01Acx39p0//NUtbi1s4W20qFzoNjCB42b+LUojsJ
+    O3gTsYjX3gTBkx71IurNkzBhyg7OgzhE2ZzaIdqsdpOl3Vq6SdskW5rONPH3Ht3IQfDgg08g7/2+
+    3/f7kzCmacL/LJY8bDabdS+KTCAjSH9vr4HkkVdIZT/QMAxgSAYWg4s+n+/K+Ph4Oh6PhznOz5Hz
+    ZrOlCIKwkc/ni6qqPsW4l38zmAwGg9ez2ezpWq3mKRZXQFXb4HA4gOd5CIfDGMdIMzMvFprN5kOM
+    n7EaxPDmB7lc7uzi4qLLx4chlT4BW7V1qIor4PF4oN1uA8dxaMjK09PP3+L7TTQo7+d+aWxsLF0u
+    iy5RFCGZOg6TUzfAx4WgUqmAoigwNDQE3W4XWJbtGx4ePkY0tH89g1Px+JGBQqEAmAkI3z7D4/u3
+    4dPSB1j7KUJlYxNkWYZIJAKdzh4kEskI0VgNBjmuz6soOzTdr1/ew7v5eRhMXoBzU3eB9QyCpmm0
+    BLJILNEcjBGXwzQNxm63g9/vpxw+OgKjo6P0sCOvgQvK4HQ6gcSYJsMQjdWg2Wg0NJ7v85Kuk1TN
+    vW0oCUt0Ql6HCiE+BLquowELkiRrRHNQAk7iY6EgSNFoFA8liMViEPB1oSG+BnnzDZyZOE/HWK/X
+    sYkuWF39IRGNNYNny8vLl1OpVH8gEHBVq1VsVILOn2QkFheoWNdNvGC3Iwjft4mGCOl3wNCS4CoK
+    bmUymbDdbnPs7OxSZ1K30+mmtFrK77m52ZqiSHfw6AnVWgzIuuZ2u3PpdPpQMpl083yANQwb3trS
+    S6WSViwWtjod7R7GPeqVfmBASgkiISSBZJCTyEDPuI4sIbPIOkJK+IVafd+ANNPbg/3HH9xFSH0q
+    ao0/AgwAVVMltdb1yu0AAAAASUVORK5CYII=""\" rel=""\"icon""\" type=""\"image/x-icon""\" />" >> "$output"
+
+    echo "<link rel=""\"stylesheet""\" type=""\"text/css""\" href=""\"${cssFile}""\" /></head>" >> "$output"
+    echo "<body><h2>Failed login count: ${count}</h2><div>" >> "$output"
+    for attempt in $(cat "$input"); do
+      timecode=$(date -d @$(echo "$attempt" | awk -F ":" '{print $1}') +${timeFormat})
+      capture=$(echo "$attempt" | awk -F ":" '{print $2}')
+      if [ ! -z "$capture" ]; then
+        echo "<a href=""\"file://${capture}""\"><img src=""\"file://${capture}""\" title=""\"${timecode}""\" width=""\"200px""\"></a>" >> "$output"
+      else
+        echo "<img src=""\"file://${placeholder}""\" title=""\"${timecode}""\" width=""\"200px""\">" >> "$output"
+      fi
+    done
+    echo "</div></body></html>" >> "$output"
     DETECT_BROWSER
-    $browser "$output";
+    $browser "$output"
   else
-    rm "$tmpDir"/* "$output" 2>/dev/null;
+    rm "$tmpDir"/* "$output" 2>/dev/null
   fi
 
-  rm "$input" 2>/dev/null;
+  rm "$input" 2>/dev/null
 }
 
 
+mkdir -p "$configDir"
 if [ "$1" = "parse" ]; then
   LOCK_PARSE
 elif [ "$1" = "fail" ]; then
