@@ -1,7 +1,7 @@
 #!/bin/bash
 #####################
 ### i3lock-sentry ###
-version="0.6" #######
+version="0.7" #######
 #####################
 
 fail="1"
@@ -16,25 +16,9 @@ placeholder="$configDir/placeholder.png"
 timeFormat="%I:%M%P"
 
 DETECT_BROWSER()
-{
-  _config="$HOME/.config/adeskbar/default.cfg"
-  _cmd=$(grep -n "\[LAUNCHER/4]" $_config | awk -F : '{print $1+1}')
-  _select=$(awk -v line=$_cmd NR==line $_config | awk '{print $1}' | awk -F = '{print $2}')
-
-  allbrowsers="chromium firefox google-chrome opera seamonkey"
-  for exec in $allbrowsers; do
-    [ -f "/usr/bin/$exec" ] && _list="${_list} $exec"
-  done
-
-  [[ "$_list" =~ \w*$_select\w* ]] && browser="$_select"
-
-  if [ -z "$browser" ]; then
-    for program in $_list; do
-      status=$(pgrep $program 2>/dev/null)
-      [ ! -z "$status" ] && browser="$program"
-    done
-  fi
-
+{ 
+  xbrowser=$(which x-www-browser 2>/dev/null)
+  [ ! -z "$xbrowser" ] && browser="x-www-browser"
   [ -z "$browser" ] && browser="xdg-open"
 }
 

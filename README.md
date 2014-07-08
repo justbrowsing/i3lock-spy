@@ -3,6 +3,7 @@ i3lock-spy : Fork of i3lock for justbrowsing using fswebcam to monitor intruders
     Minor modification of i3lock: http://code.stapelberg.de/git/i3lock
     Background resizing patches from: https://github.com/jaseg/i3lock
 
+   * New: Use x-www-browser instead of deprecated browser detection
    * New: Added zoom and fit background patches
    * New: Switched from sed hackery to a proper Makefile
    * New: Added CSS styling for intruder log
